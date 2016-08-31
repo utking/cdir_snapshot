@@ -15,13 +15,23 @@
 #include <dirent.h> 
 #endif
 
+#ifdef _WIN32
+char listPathFormat[] = "%s\\%s";
+#elif __linux__
+char listPathFormat[] = "%s/%s";
+#endif
+
+#define DIR_NAME_LENGTH 1024
+#define FILE_NAME_LENGTH 256
+#define LST_FILE_NAME "dir.lst"
+
 typedef struct _ListingNode {
 	char * fileName;
 	struct _ListingNode * next;
 } ListingNode;
 
 
-enum LogType { LOG_ERR, LOG_INFO, LOG_LOG };
+enum LogType { LOG_ERR, LOG_INFO, LOG_LOG, LOG_DONE };
 
 ListingNode * createNode(const char*);
 void freeNode(ListingNode *);
