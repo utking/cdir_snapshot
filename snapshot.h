@@ -15,7 +15,7 @@
 #include <dirent.h> 
 #endif
 
-char listPathFormat[16];
+extern char listPathFormat[];
 
 #define DIR_NAME_LENGTH 1024
 #define FILE_NAME_LENGTH 256

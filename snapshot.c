@@ -1,5 +1,12 @@
 #include "snapshot.h"
 
+#ifdef _WIN32
+char listPathFormat[] = "%s\\%s";
+#endif
+#ifdef __linux__
+char listPathFormat[] = "%s/%s";
+#endif
+
 /**
  * Print a usage string
  */
@@ -136,8 +143,8 @@ int isDirectory(const char* filePath) {
  * Caller has to take care of freeing it.
  */
 ListingNode * createNode(const char * fileName) {
-	ListingNode * node = malloc(sizeof(ListingNode));
-	node->fileName = malloc(sizeof(char) * FILE_NAME_LENGTH);
+	ListingNode * node = (ListingNode *)malloc(sizeof(ListingNode));
+	node->fileName = (char *)malloc(sizeof(char) * FILE_NAME_LENGTH);
 	memset(node->fileName, 0, FILE_NAME_LENGTH);
 	strncpy(node->fileName, fileName, FILE_NAME_LENGTH - 1);
 	node->next = NULL;
