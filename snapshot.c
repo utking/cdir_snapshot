@@ -7,6 +7,8 @@ char listPathFormat[] = "%s\\%s";
 char listPathFormat[] = "%s/%s";
 #endif
 
+int quiteMode = 0;
+
 /**
  * Print a usage string
  */
@@ -67,6 +69,10 @@ void processDirectory(const char *dirPath) {
  * Print a log message with a type and an error code
  */
 void printLog(enum LogType type, const char * msg, int errCode) {
+	if (quiteMode == 1) {
+		return;
+	}
+
 	switch (type) {
 		case LOG_ERR:
 			printf("Error (%d): %s [%s]\n", errCode, msg, strerror(errCode));
@@ -159,5 +165,12 @@ ListingNode * createNode(const char * fileName) {
 void freeNode(ListingNode *node) {
 	free(node->fileName);
 	free(node);
+}
+
+/**
+ * Set quite mode flag
+ */
+void setQuiteMode() {
+	quiteMode = 1;
 }
 

@@ -16,6 +16,7 @@
 #endif
 
 extern char listPathFormat[];
+extern int quiteMode;
 
 #define DIR_NAME_LENGTH 1024
 #define FILE_NAME_LENGTH 256
@@ -36,3 +37,4 @@ void printUsage(const char*);
 void processDirectory(const char*);
 int writeListing(const char*, ListingNode*);
 int isDirectory(const char*);
+void setQuiteMode();

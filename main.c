@@ -3,9 +3,17 @@
 int main(int argc, char** argv) {
 	char rootDirPath[256];
 	
-	if (argc != 2) {
+	if (argc < 2) {
 		printUsage(argv[0]);
 		return 0;
+	}
+
+	unsigned int curArgIndex = 2;
+	while (argc > curArgIndex) {
+		if (!strncmp(argv[curArgIndex], "-s", 2)) {
+			setQuiteMode();
+		}
+		curArgIndex++;
 	}
 
 	memset(rootDirPath, 0, 256);
