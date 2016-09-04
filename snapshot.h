@@ -15,11 +15,7 @@
 #include <dirent.h> 
 #endif
 
-#ifdef _WIN32
-char listPathFormat[] = "%s\\%s";
-#elif __linux__
-char listPathFormat[] = "%s/%s";
-#endif
+char listPathFormat[16];
 
 #define DIR_NAME_LENGTH 1024
 #define FILE_NAME_LENGTH 256
