@@ -48,6 +48,7 @@ void processDirectory(const char *dirPath) {
 			}
 			// all entries collected, save them into a listing file
 			writeListing(dirPath, top);
+			closedir(dir);
 		}
 		// free all elements
 		while (top) {
@@ -113,8 +114,8 @@ int writeListing(const char * listingDir, ListingNode * listing) {
 			}
 			top = top->next; // move to the next item
 		}
-		printLog(LOG_DONE, listingDir, 0); // show a completion message
 		fclose(fd);
+		printLog(LOG_DONE, listingDir, 0); // show a completion message
 		return 1;
 	} else {
 		printLog(LOG_ERR, "Can't write listing", errno);
