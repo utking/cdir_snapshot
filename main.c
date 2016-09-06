@@ -10,8 +10,10 @@ int main(int argc, char** argv) {
 
 	unsigned int curArgIndex = 2;
 	while (argc > curArgIndex) {
-		if (!strncmp(argv[curArgIndex], "-s", 2)) {
+		if (!strncmp(argv[curArgIndex], "-q", 2)) {
 			setQuiteMode();
+		} else if (!strncmp(argv[curArgIndex], "-s", 2)) {
+			setSingleListingMode();
 		}
 		curArgIndex++;
 	}
