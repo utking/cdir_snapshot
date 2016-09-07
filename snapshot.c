@@ -15,7 +15,10 @@ ListingNode * singleListing = NULL;
  * Print a usage string
  */
 void printUsage(const char * executableName) {
-	printf("Usage: %s %s\n", executableName, "<directory path>");
+	printf("Usage: %s %s\n", executableName, "<directory path> [-s] [-q]");
+	printf("Options:\n");
+	printf("\t-s - single listing mode. Save all the items as a single file in a current directory\n");
+	printf("\t-q - quiet mode. Do not produce any output\n");
 }
 
 /**
