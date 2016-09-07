@@ -21,8 +21,8 @@ int main(int argc, char** argv) {
 	memset(rootDirPath, 0, 256);
 	strncpy(rootDirPath, argv[1], 255);
 	
-	processDirectory(rootDirPath);
+	int result = takeSnapshot(rootDirPath);
 	printLog(LOG_INFO, "Completed", 0);
 
-	return 0;
+	return result;
 }

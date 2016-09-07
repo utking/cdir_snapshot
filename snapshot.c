@@ -8,6 +8,8 @@ char listPathFormat[] = "%s/%s";
 #endif
 
 int quiteMode = 0;
+int singleListingMode = 0;
+ListingNode * singleListing = NULL;
 
 /**
  * Print a usage string
@@ -17,7 +19,7 @@ void printUsage(const char * executableName) {
 }
 
 /**
- * Recursive function traversing a direcctory and writing a listing file
+ * Recursive function traversing a directory and writing a listing file
  */
 void processDirectory(const char *dirPath) {
 	if (isDirectory(dirPath)) {
@@ -48,9 +50,14 @@ void processDirectory(const char *dirPath) {
 				snprintf(nextDirPath, sizeof(char) * FILE_NAME_LENGTH, listPathFormat, dirPath, dirEntry->d_name);
 				processDirectory(nextDirPath);
 			}
-			// all entries collected, save them into a listing file
-			writeListing(dirPath, top);
 			closedir(dir);
+			if (singleListingMode) {
+				// In the single listing mode, collect all the items
+				addToSingleListing(dirPath, top);
+			} else {
+				// all entries collected, save them into a listing file
+				writeListing(dirPath, top);
+			}
 		}
 		// free all elements
 		while (top) {
@@ -172,5 +179,84 @@ void freeNode(ListingNode *node) {
  */
 void setQuiteMode() {
 	quiteMode = 1;
+}
+
+/**
+ * Set single listing mode flag
+ */
+void setSingleListingMode() {
+	singleListingMode = 1;
+}
+
+int addToSingleListing(const char * dirPath, ListingNode * listing) {
+	static ListingNode * curListingPos = NULL;
+	char curItemPath[DIR_NAME_LENGTH];
+	memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
+	snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, "[%s]", dirPath);
+	// create new top element with the directory path
+	ListingNode * top = createNode(curItemPath);
+	// attach the listing to that
+	top->next = listing;
+	// make that top element a new listing top
+	listing = top;
+	if (!singleListing) {
+		// There is no items yet. Initialize a listing
+		singleListing = createNode(listing->fileName);
+		listing = listing->next;
+		curListingPos = singleListing;
+	}
+	// Else, append items to the list
+	while (listing) {
+		if (listing->fileName[0] != '[') {
+			memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
+			snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, listPathFormat, dirPath, listing->fileName);
+			if (isDirectory(curItemPath)) { 
+				memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
+				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, " D:%s", listing->fileName);
+			} else {
+				memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
+				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, " F:%s", listing->fileName);
+			}
+			curListingPos->next = createNode(curItemPath);
+		} else {
+			curListingPos->next = createNode(listing->fileName);
+		}
+		listing = listing->next;
+		curListingPos = curListingPos->next;
+	}
+	return 1;
+}
+
+int takeSnapshot(const char * dirPath) {
+	processDirectory(dirPath);
+	if (singleListingMode) {
+		return writeSingleListing(singleListing);
+	}
+	return 1;
+}
+
+int writeSingleListing(ListingNode * top) {
+	char buf[FILE_NAME_LENGTH];
+	unsigned int bytesWritten = 0;
+	FILE *fd = fopen(LST_FILE_NAME, "w");
+	if (fd) {
+		/* write data, item by item */
+		while (top) {// prepare the current item to save
+			memset(buf, 0, FILE_NAME_LENGTH);
+			strncpy(buf, top->fileName, FILE_NAME_LENGTH - 1);
+			buf[strlen(buf)] = '\n'; // add a new line to each line
+			bytesWritten = fwrite(buf, sizeof(char), strlen(buf), fd);
+			if (bytesWritten != strlen(buf)) {
+				printLog(LOG_ERR, "Can't write buffer", errno);
+			}
+			top = top->next; // move to the next item
+		}
+		fclose(fd);
+		printLog(LOG_INFO, "Single listing complete!", 0); // show a completion message
+		return 1;
+	} else {
+		printLog(LOG_ERR, "Can't write a single listing", errno);
+		return 0;
+	}
 }
 
