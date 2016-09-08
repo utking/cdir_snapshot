@@ -21,7 +21,7 @@ typedef struct _ListingNode {
 	struct _ListingNode * next;
 } ListingNode;
 
-extern int quiteMode;
+extern int quietMode;
 extern int singleListingMode;
 extern ListingNode * singleListing;
 
@@ -40,7 +40,7 @@ void printUsage(const char*);
 void processDirectory(const char*);
 int writeListing(const char*, ListingNode*);
 int isDirectory(const char*);
-void setQuiteMode();
+void setQuietMode();
 void setSingleListingMode();
 int addToSingleListing(const char *, ListingNode *);
 int writeSingleListing(ListingNode *);

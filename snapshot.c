@@ -7,7 +7,7 @@ char listPathFormat[] = "%s\\%s";
 char listPathFormat[] = "%s/%s";
 #endif
 
-int quiteMode = 0;
+int quietMode = 0;
 int singleListingMode = 0;
 ListingNode * singleListing = NULL;
 
@@ -79,7 +79,7 @@ void processDirectory(const char *dirPath) {
  * Print a log message with a type and an error code
  */
 void printLog(enum LogType type, const char * msg, int errCode) {
-	if (quiteMode == 1) {
+	if (quietMode == 1) {
 		return;
 	}
 
@@ -178,10 +178,10 @@ void freeNode(ListingNode *node) {
 }
 
 /**
- * Set quite mode flag
+ * Set quiet mode flag
  */
-void setQuiteMode() {
-	quiteMode = 1;
+void setQuietMode() {
+	quietMode = 1;
 }
 
 /**

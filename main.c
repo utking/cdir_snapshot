@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 	unsigned int curArgIndex = 2;
 	while (argc > curArgIndex) {
 		if (!strncmp(argv[curArgIndex], "-q", 2)) {
-			setQuiteMode();
+			setQuietMode();
 		} else if (!strncmp(argv[curArgIndex], "-s", 2)) {
 			setSingleListingMode();
 		} else if (!strncmp(argv[curArgIndex], "-h", 2)) {
