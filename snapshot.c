@@ -231,18 +231,29 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
 }
 
 int takeSnapshot(const char * dirPath) {
+	int ret = 0;
 	processDirectory(dirPath);
 	if (singleListingMode) {
-		return writeSingleListing(singleListing);
+		 ret = writeSingleListing(singleListing);
+		 // free all elements
+		 while (singleListing) {
+			 // take the head element 
+			 ListingNode *curNode = singleListing;
+			 // move to the next one
+			 singleListing = singleListing->next;
+			 // free the taken one
+			 freeNode(curNode);
+		 }
 	}
-	return 1;
+	return ret;
 }
 
-int writeSingleListing(ListingNode * top) {
+int writeSingleListing(ListingNode * listing) {
 	char buf[FILE_NAME_LENGTH];
 	unsigned int bytesWritten = 0;
 	FILE *fd = fopen(LST_FILE_NAME, "w");
 	if (fd) {
+		ListingNode * top = listing;
 		/* write data, item by item */
 		while (top) {// prepare the current item to save
 			memset(buf, 0, FILE_NAME_LENGTH);
