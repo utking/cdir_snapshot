@@ -227,6 +227,7 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
 		listing = listing->next;
 		curListingPos = curListingPos->next;
 	}
+	freeNode(top);
 	return 1;
 }
 
