@@ -2,7 +2,7 @@
 #include <getopt.h>
 
 int main(int argc, char** argv) {
-	char rootDirPath[256];
+	char rootDirPath[FILE_NAME_LENGTH];
 	int opt;
 
 	if (argc < 2 || !strncmp(argv[1], "-h", 2)) {
@@ -10,8 +10,8 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	memset(rootDirPath, 0, 256);
-	strncpy(rootDirPath, argv[1], 255);
+	memset(rootDirPath, 0, FILE_NAME_LENGTH);
+	strncpy(rootDirPath, argv[1], FILE_NAME_LENGTH - 1);
 	
 	while ((opt = getopt(argc, argv, "qshf:d:l:")) != -1) {
 		switch (opt) {
