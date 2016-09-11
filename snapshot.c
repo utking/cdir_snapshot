@@ -7,6 +7,9 @@ char listPathFormat[] = "%s\\%s";
 char listPathFormat[] = "%s/%s";
 #endif
 
+char listingFileName[FILE_NAME_LENGTH] = LST_FILE_NAME;
+char directoryPrefix = 'D';
+char filePrefix = 'F';
 int quietMode = 0;
 int singleListingMode = 0;
 ListingNode * singleListing = NULL;
@@ -15,9 +18,12 @@ ListingNode * singleListing = NULL;
  * Print a usage string
  */
 void printUsage(const char * executableName) {
-	printf("Usage: %s %s\n", executableName, "<directory path> [-s] [-q] [-h]");
+	printf("Usage: %s %s\n", executableName, "<directory path> [-sqh] [-d <D>] [-f <F>] [-l <dir.lst>]");
 	printf("Options:\n");
-	printf("\t-s - single listing mode. Save all the items as a single file in a current directory\n");
+	printf("\t-s - single listing. Save items in a single file in the current directory\n");
+	printf("\t-d - set a custom directory prefix letter. 'D' by default.\n");
+	printf("\t-f - set a custom file prefix letter. 'F' by default.\n");
+	printf("\t-l - set a custom listing file name. 'dir.lst' by default.\n");
 	printf("\t-q - quiet mode. Do not produce any output\n");
 	printf("\t-h - print usage info\n");
 }
@@ -116,7 +122,7 @@ int writeListing(const char * listingDir, ListingNode * listing) {
 
 	// prepare and fill the full path to the listing file
 	memset(listingFilePath, 0, sizeof(char) * DIR_NAME_LENGTH);
-	snprintf(listingFilePath, DIR_NAME_LENGTH, listPathFormat, listingDir, LST_FILE_NAME);
+	snprintf(listingFilePath, DIR_NAME_LENGTH, listPathFormat, listingDir, listingFileName);
 
 	FILE *fd = fopen(listingFilePath, "w");
 	if (fd) {
@@ -213,13 +219,18 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
 	while (listing) {
 		if (listing->fileName[0] != '[') {
 			memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-			snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, listPathFormat, dirPath, listing->fileName);
+			snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, 
+					listPathFormat, dirPath, listing->fileName);
 			if (isDirectory(curItemPath)) { 
 				memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, " D:%s", listing->fileName);
+				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH,
+						" %c:%s", directoryPrefix, listing->fileName);
+				printLog(LOG_INFO, curItemPath, 0);
 			} else {
 				memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, " F:%s", listing->fileName);
+				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, 
+						" %c:%s", filePrefix, listing->fileName);
+				printLog(LOG_INFO, curItemPath, 0);
 			}
 			curListingPos->next = createNode(curItemPath);
 		} else {
@@ -253,7 +264,7 @@ int takeSnapshot(const char * dirPath) {
 int writeSingleListing(ListingNode * listing) {
 	char buf[FILE_NAME_LENGTH];
 	unsigned int bytesWritten = 0;
-	FILE *fd = fopen(LST_FILE_NAME, "w");
+	FILE *fd = fopen(listingFileName, "w");
 	if (fd) {
 		ListingNode * top = listing;
 		/* write data, item by item */
@@ -273,6 +284,21 @@ int writeSingleListing(ListingNode * listing) {
 	} else {
 		printLog(LOG_ERR, "Can't write a single listing", errno);
 		return 0;
+	}
+}
+
+void setDirectoryPrefix(char prefix) {
+	directoryPrefix = prefix;
+}
+
+void setFilePrefix(char prefix) {
+	filePrefix = prefix;
+}
+
+void setListingFileName(char * fileName) {
+	if (fileName) {
+		strncpy(listingFileName, fileName, FILE_NAME_LENGTH - 1);
+		listingFileName[FILE_NAME_LENGTH - 1] = 0; // set an EOL
 	}
 }
 
