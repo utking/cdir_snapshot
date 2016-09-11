@@ -1,24 +1,30 @@
 #include "snapshot.h"
+#include <getopt.h>
 
 int main(int argc, char** argv) {
 	char rootDirPath[256];
+	int opt;
 	
+	while ((opt = getopt(argc, argv, "qshfdl:")) != -1) {
+		switch (opt) {
+			case 'q':
+				setQuietMode();
+				break;
+			case 's':
+				setSingleListingMode();
+				break;
+			case 'h':
+				printUsage(argv[0]);
+				return 0;
+			default:
+				printUsage(argv[0]);
+				return 1;
+		}
+	}
+
 	if (argc < 2 || !strncmp(argv[1], "-h", 2)) {
 		printUsage(argv[0]);
 		return 0;
-	}
-
-	unsigned int curArgIndex = 2;
-	while (argc > curArgIndex) {
-		if (!strncmp(argv[curArgIndex], "-q", 2)) {
-			setQuietMode();
-		} else if (!strncmp(argv[curArgIndex], "-s", 2)) {
-			setSingleListingMode();
-		} else if (!strncmp(argv[curArgIndex], "-h", 2)) {
-			printUsage(argv[0]);
-			return 0;
-		}
-		curArgIndex++;
 	}
 
 	memset(rootDirPath, 0, 256);
