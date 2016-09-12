@@ -71,7 +71,7 @@ void processDirectory(const char *dirPath) {
 		}
 		// free all elements
 		while (top) {
-			// take the head element 
+			// take the head element
 			ListingNode *curNode = top;
 			// move to the next one
 			top = top->next;
@@ -198,9 +198,14 @@ void setSingleListingMode() {
 	singleListingMode = 1;
 }
 
+/**
+ * Add a directory listing to the single listing
+ */
 int addToSingleListing(const char * dirPath, ListingNode * listing) {
+	// static current position in the single listing
 	static ListingNode * curListingPos = NULL;
 	char curItemPath[DIR_NAME_LENGTH];
+	// embrace a directory path into square brackets
 	memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
 	snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, "[%s]", dirPath);
 	// create new top element with the directory path
@@ -218,49 +223,66 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
 	// Else, append items to the list
 	while (listing) {
 		if (listing->fileName[0] != '[') {
+			// it is a directory, so traverse its items
 			memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
 			snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, 
 					listPathFormat, dirPath, listing->fileName);
+			// Prepend the item with the directory prefix, if it is a directory
 			if (isDirectory(curItemPath)) { 
 				memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
 				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH,
 						" %c:%s", directoryPrefix, listing->fileName);
 				printLog(LOG_INFO, curItemPath, 0);
 			} else {
+				// prepend it with the file prefix
 				memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
 				snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, 
 						" %c:%s", filePrefix, listing->fileName);
 				printLog(LOG_INFO, curItemPath, 0);
 			}
+			// append the new node
 			curListingPos->next = createNode(curItemPath);
 		} else {
+			// it'a file, just add it
 			curListingPos->next = createNode(listing->fileName);
 		}
+		// move to the next element
 		listing = listing->next;
+		// update current position
 		curListingPos = curListingPos->next;
 	}
+	// free list
 	freeNode(top);
 	return 1;
 }
 
+/**
+ * General function starting a directory traversing
+ * and writing the single listing if it was chosen
+ */
 int takeSnapshot(const char * dirPath) {
 	int ret = 0;
+	// process a directory
 	processDirectory(dirPath);
 	if (singleListingMode) {
-		 ret = writeSingleListing(singleListing);
-		 // free all elements
-		 while (singleListing) {
-			 // take the head element 
-			 ListingNode *curNode = singleListing;
-			 // move to the next one
-			 singleListing = singleListing->next;
-			 // free the taken one
-			 freeNode(curNode);
-		 }
+		// write the single listing
+		ret = writeSingleListing(singleListing);
+		// free all elements
+		while (singleListing) {
+			// take the head element
+			ListingNode *curNode = singleListing;
+			// move to the next one
+			singleListing = singleListing->next;
+			// free the taken one
+			freeNode(curNode);
+		}
 	}
 	return ret;
 }
 
+/**
+ * Write the single listing into a file
+ */
 int writeSingleListing(ListingNode * listing) {
 	char buf[FILE_NAME_LENGTH];
 	unsigned int bytesWritten = 0;
@@ -287,14 +309,23 @@ int writeSingleListing(ListingNode * listing) {
 	}
 }
 
+/**
+ * Set a custom directory prefix
+ */
 void setDirectoryPrefix(char prefix) {
 	directoryPrefix = prefix;
 }
 
+/**
+ * Set a custom file prefix
+ */
 void setFilePrefix(char prefix) {
 	filePrefix = prefix;
 }
 
+/**
+ * Set a custom file name for the single listing
+ */
 void setListingFileName(char * fileName) {
 	if (fileName) {
 		strncpy(listingFileName, fileName, FILE_NAME_LENGTH - 1);
