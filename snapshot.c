@@ -131,7 +131,7 @@ int writeListing(const char * listingDir, ListingNode * listing) {
 			memset(buf, 0, FILE_NAME_LENGTH);
 			strncpy(buf, top->fileName, FILE_NAME_LENGTH - 1);
 			buf[strlen(buf)] = '\n'; // add a new line to each line
-			bytesWritten = fwrite(buf, sizeof(char), strlen(buf), fd);
+			bytesWritten = (unsigned int) fwrite(buf, sizeof(char), strlen(buf), fd);
 			if (bytesWritten != strlen(buf)) {
 				printLog(LOG_ERR, "Can't write buffer", errno);
 			}
@@ -294,7 +294,7 @@ int writeSingleListing(ListingNode * listing) {
 			memset(buf, 0, FILE_NAME_LENGTH);
 			strncpy(buf, top->fileName, FILE_NAME_LENGTH - 1);
 			buf[strlen(buf)] = '\n'; // add a new line to each line
-			bytesWritten = fwrite(buf, sizeof(char), strlen(buf), fd);
+			bytesWritten = (unsigned int) fwrite(buf, sizeof(char), strlen(buf), fd);
 			if (bytesWritten != strlen(buf)) {
 				printLog(LOG_ERR, "Can't write buffer", errno);
 			}
