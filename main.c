@@ -3,7 +3,7 @@
 
 int main(int argc, char** argv) {
 	char rootDirPath[FILE_NAME_LENGTH];
-	int opt;
+	int opt, result;
 
 	if (argc < 2 || !strncmp(argv[1], "-h", 2)) {
 		printUsage(argv[0]);
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 	}
 
 	printLog(LOG_INFO, rootDirPath, 0);
-	int result = takeSnapshot(rootDirPath);
+	result = takeSnapshot(rootDirPath);
 	printLog(LOG_INFO, "Completed", 0);
 
 	return result;
