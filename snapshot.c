@@ -115,30 +115,31 @@ void printLog(enum LogType type, const char * msg, int errCode) {
  * Write a listing file filled with listing items
  */
 int writeListing(const char * listingDir, ListingNode * listing) {
+	int fd;
 	ListingNode *top = listing;
-	FILE *fd;
-	unsigned int bytesWritten = 0;
+	ssize_t bytesWritten = 0;
 	char buf[FILE_NAME_LENGTH];
 	char listingFilePath[DIR_NAME_LENGTH]; /* Full path to a listing file */
+	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
 	/* prepare and fill the full path to the listing file */
 	memset(listingFilePath, 0, sizeof(char) * DIR_NAME_LENGTH);
 	snprintf(listingFilePath, DIR_NAME_LENGTH, listPathFormat, listingDir, listingFileName);
 
-	fd = fopen(listingFilePath, "w");
-	if (fd) {
+	fd = open(listingFilePath, O_WRONLY | O_CREAT | O_TRUNC, mode);
+	if (fd != -1) {
 		/* write data, item by item */
 		while (top) {/* prepare the current item to save */
 			memset(buf, 0, FILE_NAME_LENGTH);
 			strncpy(buf, top->fileName, FILE_NAME_LENGTH - 1);
 			buf[strlen(buf)] = '\n'; /* add a new line to each line */
-			bytesWritten = (unsigned int) fwrite(buf, sizeof(char), strlen(buf), fd);
+			bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * strlen(buf));
 			if (bytesWritten != strlen(buf)) {
 				printLog(LOG_ERR, "Can't write buffer", errno);
 			}
 			top = top->next; /* move to the next item */
 		}
-		fclose(fd);
+		close(fd);
 		printLog(LOG_DONE, listingDir, 0); /* show a completion message */
 		return 1;
 	} else {
