@@ -1,6 +1,6 @@
 # cdir_snapshot
 
-C-program traversing a directory and writing its content into a 'dir.lst' file
+C-program traversing a directory and writing its content into a listing file
 
 ## Installation
 
