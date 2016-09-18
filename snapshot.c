@@ -288,22 +288,23 @@ int takeSnapshot(const char * dirPath) {
  */
 int writeSingleListing(ListingNode * listing) {
 	char buf[FILE_NAME_LENGTH];
-	unsigned int bytesWritten = 0;
-	FILE *fd = fopen(listingFileName, "w");
-	if (fd) {
+	ssize_t bytesWritten = 0;
+	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+	int fd = open(listingFileName, O_WRONLY | O_CREAT | O_TRUNC, mode);
+	if (fd != -1) {
 		ListingNode * top = listing;
 		/* write data, item by item */
 		while (top) {/* prepare the current item to save */
 			memset(buf, 0, FILE_NAME_LENGTH);
 			strncpy(buf, top->fileName, FILE_NAME_LENGTH - 1);
 			buf[strlen(buf)] = '\n'; /* add a new line to each line */
-			bytesWritten = (unsigned int) fwrite(buf, sizeof(char), strlen(buf), fd);
+			bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * strlen(buf));
 			if (bytesWritten != strlen(buf)) {
 				printLog(LOG_ERR, "Can't write buffer", errno);
 			}
 			top = top->next; /* move to the next item */
 		}
-		fclose(fd);
+		close(fd);
 		printLog(LOG_INFO, "Single listing complete!", 0); /* show a completion message */
 		return 1;
 	} else {
