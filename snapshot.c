@@ -126,7 +126,11 @@ int writeListing(const char * listingDir, ListingNode * listing) {
 	memset(listingFilePath, 0, sizeof(char) * DIR_NAME_LENGTH);
 	snprintf(listingFilePath, DIR_NAME_LENGTH, listPathFormat, listingDir, listingFileName);
 
+#ifdef O_NOFOLLOW
+	fd = open(listingFilePath, O_WRONLY | O_CREAT | O_NOFOLLOW | O_TRUNC, mode);
+#else
 	fd = open(listingFilePath, O_WRONLY | O_CREAT | O_TRUNC, mode);
+#endif
 	if (fd != -1) {
 		/* write data, item by item */
 		while (top) {/* prepare the current item to save */
@@ -288,9 +292,14 @@ int takeSnapshot(const char * dirPath) {
  */
 int writeSingleListing(ListingNode * listing) {
 	char buf[FILE_NAME_LENGTH];
+  int fd;
 	ssize_t bytesWritten = 0;
 	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-	int fd = open(listingFileName, O_WRONLY | O_CREAT | O_TRUNC, mode);
+#ifdef O_NOFOLLOW
+	fd = open(listingFileName, O_WRONLY | O_CREAT | O_NOFOLLOW | O_TRUNC, mode);
+#else
+	fd = open(listingFileName, O_WRONLY | O_CREAT | O_TRUNC, mode);
+#endif
 	if (fd != -1) {
 		ListingNode * top = listing;
 		/* write data, item by item */
