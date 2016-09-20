@@ -22,8 +22,8 @@
 
 extern char listPathFormat[];
 typedef struct _ListingNode {
-	char * fileName;
-	struct _ListingNode * next;
+  char * fileName;
+  struct _ListingNode * next;
 } ListingNode;
 
 extern char listingFileName[FILE_NAME_LENGTH];
