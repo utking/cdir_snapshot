@@ -1,5 +1,5 @@
 CC 			= gcc
-CFLAGS 	= -std=c99 -ggdb -Wall -Werror
+CFLAGS 	= -std=gnu99 -ggdb -Wall -Werror
 OBJS 		= *.o
 TARGET 	= prog
 CLEAN 	= rm -rf
