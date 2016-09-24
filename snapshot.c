@@ -239,13 +239,11 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
         memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
         snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH,
             " %c:%s", directoryPrefix, listing->fileName);
-        printLog(LOG_INFO, curItemPath, 0);
       } else {
         /* prepend it with the file prefix */
         memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
         snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, 
             " %c:%s", filePrefix, listing->fileName);
-        printLog(LOG_INFO, curItemPath, 0);
       }
       /* append the new node */
       curListingPos->next = createNode(curItemPath);
