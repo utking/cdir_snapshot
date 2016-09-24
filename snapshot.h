@@ -43,7 +43,7 @@ void printUsage(const char*);
 void processDirectory(const char*);
 int writeListing(const char*, ListingNode*);
 int isDirectory(const char*);
-void setQuietMode();
+void setVerboseMode();
 void setSingleListingMode();
 void setDirectoryPrefix(char);
 void setFilePrefix(char);

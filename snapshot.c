@@ -10,7 +10,7 @@ char listPathFormat[] = "%s/%s";
 char listingFileName[FILE_NAME_LENGTH] = LST_FILE_NAME;
 char directoryPrefix = 'D';
 char filePrefix = 'F';
-int quietMode = 0;
+int quietMode = 1;
 int singleListingMode = 0;
 ListingNode * singleListing = NULL;
 
@@ -24,7 +24,7 @@ void printUsage(const char * executableName) {
   printf("\t-d - set a custom directory prefix letter. 'D' by default.\n");
   printf("\t-f - set a custom file prefix letter. 'F' by default.\n");
   printf("\t-l - set a custom listing file name. 'dir.lst' by default.\n");
-  printf("\t-q - quiet mode. Do not produce any output\n");
+  printf("\t-v - verbose mode.\n");
   printf("\t-h - print usage info\n");
 }
 
@@ -193,8 +193,8 @@ void freeNode(ListingNode *node) {
 /**
  * Set quiet mode flag
  */
-void setQuietMode() {
-  quietMode = 1;
+void setVerboseMode() {
+  quietMode = 0;
 }
 
 /**

@@ -13,10 +13,10 @@ int main(int argc, char** argv) {
   memset(rootDirPath, 0, FILE_NAME_LENGTH);
   strncpy(rootDirPath, argv[1], FILE_NAME_LENGTH - 1);
   
-  while ((opt = getopt(argc, argv, "qshf:d:l:")) != -1) {
+  while ((opt = getopt(argc, argv, "vshf:d:l:")) != -1) {
     switch (opt) {
-      case 'q':
-        setQuietMode();
+      case 'v':
+        setVerboseMode();
         break;
       case 's':
         setSingleListingMode();
