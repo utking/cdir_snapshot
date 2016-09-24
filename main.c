@@ -40,6 +40,9 @@ int main(int argc, char** argv) {
   }
 
   printLog(LOG_INFO, rootDirPath, 0);
+  if (rootDirPath[strlen(rootDirPath) - 1] == '/') {
+    rootDirPath[strlen(rootDirPath) - 1] = '\0';
+  }
   result = takeSnapshot(rootDirPath);
   printLog(LOG_INFO, "Completed", 0);
 
