@@ -26,6 +26,13 @@ typedef struct _ListingNode {
   struct _ListingNode * next;
 } ListingNode;
 
+typedef struct _DirTreeNode {
+    char * name;
+    struct _DirTreeNode * left;
+    struct _DirTreeNode * right;
+    ListingNode * items;
+} DirTreeNode;
+
 extern char listingFileName[FILE_NAME_LENGTH];
 extern char directoryPrefix;
 extern char filePrefix;
@@ -41,7 +48,7 @@ void freeNode(ListingNode *);
 void printLog(enum LogType, const char*, int);
 void printUsage(const char*);
 void processDirectory(const char*);
-int writeListing(const char*, ListingNode*);
+int writeListing(DirTreeNode*);
 int isDirectory(const char*);
 void setVerboseMode();
 void setSingleListingMode();
@@ -50,3 +57,8 @@ void setFilePrefix(char);
 void setListingFileName(char *);
 int addToSingleListing(const char *, ListingNode *);
 int writeSingleListing(ListingNode *);
+
+DirTreeNode * createTree(const char *);
+void insertNode(DirTreeNode *, const char *);
+void freeTree(DirTreeNode *);
+int writeDirNode(const int, DirTreeNode *);
