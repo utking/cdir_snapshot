@@ -70,15 +70,7 @@ void processDirectory(const char *dirPath) {
       }
     }
     /* free all elements */
-    top = listing->items;
-    while (top) {
-      /* take the head element */
-      ListingNode *curNode = top;
-      /* move to the next one */
-      top = top->next;
-      /* free the taken one */
-      freeNode(curNode);
-    }
+    freeTree(listing);
   }
 }
 
@@ -399,8 +391,19 @@ void freeTree(DirTreeNode * top) {
     free(top->name);
     free(top->left);
     free(top->right);
-    freeNode(top->items);
+    freeList(top->items);
     free(top);
+  }
+}
+
+void freeList(ListingNode * top) {
+  while (top) {
+    /* take the head element */
+    ListingNode *curNode = top;
+    /* move to the next one */
+    top = top->next;
+    /* free the taken one */
+    freeNode(curNode);
   }
 }
 
