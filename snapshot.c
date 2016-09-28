@@ -95,7 +95,7 @@ void printLog(enum LogType type, const char * msg, int errCode) {
       break;
     case LOG_DONE:
       /* print a completion message 
-      (when a directory listing completed, for example) */
+         (when a directory listing completed, for example) */
       printf("Done: %s\n", msg);
       break;
     default:
@@ -405,8 +405,4 @@ void freeList(ListingNode * top) {
     /* free the taken one */
     freeNode(curNode);
   }
-}
-
-int writeDirNode(const int fd, DirTreeNode * node) {
-  return 0;
 }

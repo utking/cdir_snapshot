@@ -62,4 +62,3 @@ DirTreeNode * createTree(const char *);
 void insertNode(DirTreeNode *, const char *);
 void freeTree(DirTreeNode *);
 void freeList(ListingNode *);
-int writeDirNode(const int, DirTreeNode *);
