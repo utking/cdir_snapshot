@@ -32,10 +32,11 @@ void printUsage(const char * executableName) {
  * Recursive function traversing a directory and writing a listing file
  */
 void processDirectory(const char *dirPath) {
-  if (isDirectory(dirPath)) {
+  if (isDirectory(dirPath, "")) {
     DIR *dir;
     char nextDirPath[FILE_NAME_LENGTH]; /* Full path to a next directory */
     ListingNode * top;
+    int isDir = 0;
     DirTreeNode *listing = createTree(dirPath); /* head node */
     struct dirent *dirEntry;
     dir = opendir(dirPath);
@@ -47,17 +48,18 @@ void processDirectory(const char *dirPath) {
             !strncmp(dirEntry->d_name, LST_FILE_NAME, FILE_NAME_LENGTH)) {
           continue;
         }
+        isDir = isDirectory(dirPath, dirEntry->d_name);
         if (!listing->items) { /* head node is empty, create a new one */
-          listing->items = createNode(dirEntry->d_name);
+          listing->items = createNode(dirEntry->d_name, isDir);
           top = listing->items; /* remember the head element */
         } else {
           /* create a next node */
-          top->next = createNode(dirEntry->d_name);
+          top->next = createNode(dirEntry->d_name, isDir);
           top = top->next;
         }
         /* If a current entry is directory, processDirectory(curEntry) */
         memset(nextDirPath, 0, sizeof(char) * FILE_NAME_LENGTH);
-        snprintf(nextDirPath, sizeof(char) * FILE_NAME_LENGTH, listPathFormat, dirPath, dirEntry->d_name);
+        snprintf(nextDirPath, sizeof(char) * (FILE_NAME_LENGTH - 1), listPathFormat, dirPath, dirEntry->d_name);
         processDirectory(nextDirPath);
       }
       closedir(dir);
@@ -116,7 +118,7 @@ int writeListing(DirTreeNode * listing) {
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
   /* prepare and fill the full path to the listing file */
-  memset(listingFilePath, 0, sizeof(char) * DIR_NAME_LENGTH);
+  memset(listingFilePath, 0, sizeof(char) * (DIR_NAME_LENGTH - 1));
   snprintf(listingFilePath, DIR_NAME_LENGTH, listPathFormat, listing->name, listingFileName);
 
 #ifdef O_NOFOLLOW
@@ -126,7 +128,7 @@ int writeListing(DirTreeNode * listing) {
 #endif
   if (fd != -1) {
     memset(buf, 0, FILE_NAME_LENGTH);
-    strncpy(buf, listing->name, FILE_NAME_LENGTH - 1);
+    snprintf(buf, FILE_NAME_LENGTH-1, "[%s]", listing->name);
     buf[strlen(buf)] = '\n'; /* add a new line to each line */
     bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * strlen(buf));
     if (bytesWritten != strlen(buf)) {
@@ -135,7 +137,7 @@ int writeListing(DirTreeNode * listing) {
     /* write data, item by item */
     while (top) {/* prepare the current item to save */
       memset(buf, 0, FILE_NAME_LENGTH);
-      strncpy(buf, top->fileName, FILE_NAME_LENGTH - 1);
+      snprintf(buf, FILE_NAME_LENGTH-1, " %c:%s", top->itemType, top->fileName);
       buf[strlen(buf)] = '\n'; /* add a new line to each line */
       bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * strlen(buf));
       if (bytesWritten != strlen(buf)) {
@@ -155,13 +157,15 @@ int writeListing(DirTreeNode * listing) {
 /**
  * Find out if the item is a directory.
  */
-int isDirectory(const char* filePath) {
+int isDirectory(const char* dirPath, const char* filePath) {
+  char curItemPath[DIR_NAME_LENGTH];
+  memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
+  snprintf(curItemPath, sizeof(char) * (DIR_NAME_LENGTH - 1), listPathFormat, dirPath, filePath);
 #ifdef _WIN32
   /* For now, Windows is not supported */
-  return 0;
 #elif __linux__
   struct stat sb;
-  return (stat(filePath, &sb) == 0 && S_ISDIR(sb.st_mode));
+  return (stat(curItemPath, &sb) == 0 && S_ISDIR(sb.st_mode));
 #else
   /* Other platforms also are not supported */
   return 0;
@@ -172,11 +176,16 @@ int isDirectory(const char* filePath) {
  * Create a listing node with the fileName as a value.
  * Caller has to take care of freeing it.
  */
-ListingNode * createNode(const char * fileName) {
+ListingNode * createNode(const char * fileName, const int isDir) {
   ListingNode * node = (ListingNode *)malloc(sizeof(ListingNode));
   node->fileName = (char *)malloc(sizeof(char) * FILE_NAME_LENGTH);
   memset(node->fileName, 0, FILE_NAME_LENGTH);
   strncpy(node->fileName, fileName, FILE_NAME_LENGTH - 1);
+  if (isDir) {
+      node->itemType = directoryPrefix;
+  } else {
+      node->itemType = filePrefix;
+  }
   node->next = NULL;
 
   return node;
@@ -211,31 +220,30 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
   /* static current position in the single listing */
   static ListingNode * curListingPos = NULL;
   ListingNode * top;
+  int isDir = 1;
   char curItemPath[DIR_NAME_LENGTH];
   /* embrace a directory path into square brackets */
   memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-  snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, "[%s]", dirPath);
+  snprintf(curItemPath, sizeof(char) * (DIR_NAME_LENGTH - 1), "[%s]", dirPath);
   /* create new top element with the directory path */
-  top = createNode(curItemPath);
+  top = createNode(curItemPath, isDir);
   /* attach the listing to that */
   top->next = listing;
   /* make that top element a new listing top */
   listing = top;
   if (!singleListing) {
     /* There is no items yet. Initialize a listing */
-    singleListing = createNode(listing->fileName);
+    singleListing = createNode(listing->fileName, isDirectory(dirPath, listing->fileName));
     listing = listing->next;
     curListingPos = singleListing;
   }
   /* Else, append items to the list */
   while (listing) {
     if (listing->fileName[0] != '[') {
-      /* it is a directory, so traverse its items */
-      memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-      snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, 
-          listPathFormat, dirPath, listing->fileName);
+      isDir = isDirectory(dirPath, listing->fileName);
+      /* it is not the root directory */
       /* Prepend the item with the directory prefix, if it is a directory */
-      if (isDirectory(curItemPath)) { 
+      if (isDir) {
         memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
         snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH,
             " %c:%s", directoryPrefix, listing->fileName);
@@ -246,10 +254,10 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
             " %c:%s", filePrefix, listing->fileName);
       }
       /* append the new node */
-      curListingPos->next = createNode(curItemPath);
+      curListingPos->next = createNode(curItemPath, isDir);
     } else {
-      /* it'a file, just add it */
-      curListingPos->next = createNode(listing->fileName);
+      /* it'a directory, just add it */
+      curListingPos->next = createNode(listing->fileName, 1);
     }
     /* move to the next element */
     listing = listing->next;

@@ -22,6 +22,7 @@
 
 extern char listPathFormat[];
 typedef struct _ListingNode {
+  char itemType;
   char * fileName;
   struct _ListingNode * next;
 } ListingNode;
@@ -43,13 +44,13 @@ extern ListingNode * singleListing;
 enum LogType { LOG_ERR, LOG_INFO, LOG_LOG, LOG_DONE };
 
 int takeSnapshot(const char*);
-ListingNode * createNode(const char*);
+ListingNode * createNode(const char*, const int);
 void freeNode(ListingNode *);
 void printLog(enum LogType, const char*, int);
 void printUsage(const char*);
 void processDirectory(const char*);
 int writeListing(DirTreeNode*);
-int isDirectory(const char*);
+int isDirectory(const char*, const char *);
 void setVerboseMode();
 void setSingleListingMode();
 void setDirectoryPrefix(char);
