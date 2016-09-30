@@ -240,23 +240,10 @@ int addToSingleListing(const char * dirPath, ListingNode * listing) {
   /* Else, append items to the list */
   while (listing) {
     if (listing->fileName[0] != '[') {
-      isDir = isDirectory(dirPath, listing->fileName);
-      /* it is not the root directory */
-      /* Prepend the item with the directory prefix, if it is a directory */
-      if (isDir) {
-        memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-        snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH,
-            " %c:%s", directoryPrefix, listing->fileName);
-      } else {
-        /* prepend it with the file prefix */
-        memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-        snprintf(curItemPath, sizeof(char) * DIR_NAME_LENGTH, 
-            " %c:%s", filePrefix, listing->fileName);
-      }
-      /* append the new node */
-      curListingPos->next = createNode(curItemPath, isDir);
+      /* it is not the root directory; append the new node */
+      curListingPos->next = createNode(listing->fileName, listing->itemType == directoryPrefix);
     } else {
-      /* it'a directory, just add it */
+      /* it'a root directory, just add it */
       curListingPos->next = createNode(listing->fileName, 1);
     }
     /* move to the next element */
