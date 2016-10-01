@@ -181,9 +181,7 @@ int isDirectory(const char* dirPath, const char* filePath) {
  */
 ListingNode * createNode(const char * fileName, const int isDir) {
   ListingNode * node = (ListingNode *)malloc(sizeof(ListingNode));
-  node->fileName = (char *)malloc(sizeof(char) * FILE_NAME_LENGTH);
-  memset(node->fileName, 0, FILE_NAME_LENGTH);
-  strncpy(node->fileName, fileName, FILE_NAME_LENGTH - 1);
+  node->fileName = strndup(fileName, FILE_NAME_LENGTH - 1);
   if (isDir) {
       node->itemType = directoryPrefix;
   } else {
@@ -362,9 +360,7 @@ DirTreeNode * createTree(const char * fileName) {
   node->items = NULL;
   node->left = NULL;
   node->right = NULL;
-  node->name = (char *)malloc(sizeof(char) * FILE_NAME_LENGTH);
-  memset(node->name, 0, FILE_NAME_LENGTH);
-  strncpy(node->name, fileName, FILE_NAME_LENGTH - 1);
+  node->name = strndup(fileName, FILE_NAME_LENGTH - 1);
 
   return node;
 }
