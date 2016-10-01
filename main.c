@@ -13,10 +13,13 @@ int main(int argc, char** argv) {
   memset(rootDirPath, 0, FILE_NAME_LENGTH);
   strncpy(rootDirPath, argv[1], FILE_NAME_LENGTH - 1);
   
-  while ((opt = getopt(argc, argv, "vshf:d:l:")) != -1) {
+  while ((opt = getopt(argc, argv, "avshf:d:l:")) != -1) {
     switch (opt) {
       case 'v':
         setVerboseMode();
+        break;
+      case 'a':
+        setProcessHiddenFiles();
         break;
       case 's':
         setSingleListingMode();

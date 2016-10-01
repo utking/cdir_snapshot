@@ -10,6 +10,7 @@ char listPathFormat[] = "%s/%s";
 char listingFileName[FILE_NAME_LENGTH] = LST_FILE_NAME;
 char directoryPrefix = 'D';
 char filePrefix = 'F';
+int processHiddenFiles = 0;
 int quietMode = 1;
 int singleListingMode = 0;
 ListingNode * singleListing = NULL;
@@ -45,7 +46,8 @@ void processDirectory(const char *dirPath) {
         /* skip 'this' and 'parent' directories and existing listing files */
         if (!strncmp(dirEntry->d_name, ".", FILE_NAME_LENGTH) || 
             !strncmp(dirEntry->d_name, "..", FILE_NAME_LENGTH) ||
-            !strncmp(dirEntry->d_name, LST_FILE_NAME, FILE_NAME_LENGTH)) {
+            !strncmp(dirEntry->d_name, LST_FILE_NAME, FILE_NAME_LENGTH) ||
+            (dirEntry->d_name[0] == '.' && !processHiddenFiles) ){
           continue;
         }
         isDir = isDirectory(dirPath, dirEntry->d_name);
@@ -284,7 +286,7 @@ int takeSnapshot(const char * dirPath) {
  * Write the single listing into a file
  */
 int writeSingleListing(ListingNode * listing) {
-  char *b;
+  char *buf;
   int fd, bLen, ret = 1;
   ssize_t bytesWritten = 0;
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -293,8 +295,8 @@ int writeSingleListing(ListingNode * listing) {
 #else
   fd = open(listingFileName, O_WRONLY | O_CREAT | O_TRUNC, mode);
 #endif
-  b = (char*)malloc(FILE_NAME_LENGTH * sizeof(char));
-  if (!b) {
+  buf = (char*)malloc(FILE_NAME_LENGTH * sizeof(char));
+  if (!buf) {
       printLog(LOG_ERR, "Cannot allocate memory for writing a single listing", 0);
       return 0;
   }
@@ -303,11 +305,11 @@ int writeSingleListing(ListingNode * listing) {
     /* write data, item by item */
     while (top) {/* prepare the current item to save */
       if (top->fileName[0] == '[') {
-        bLen = snprintf(b, FILE_NAME_LENGTH, "%s\n", top->fileName);
+        bLen = snprintf(buf, FILE_NAME_LENGTH, "%s\n", top->fileName);
       } else {
-        bLen = snprintf(b, FILE_NAME_LENGTH, " %c:%s\n", top->itemType, top->fileName);
+        bLen = snprintf(buf, FILE_NAME_LENGTH, " %c:%s\n", top->itemType, top->fileName);
       }
-      bytesWritten = (ssize_t) write(fd, b, sizeof(char) * bLen);
+      bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * bLen);
       if (bytesWritten != bLen) {
         printLog(LOG_ERR, "Can't write buffer", errno);
       }
@@ -320,7 +322,7 @@ int writeSingleListing(ListingNode * listing) {
     printLog(LOG_ERR, "Can't write a single listing", errno);
     ret = 0;
   }
-  free(b);
+  free(buf);
   return ret;
 }
 
@@ -409,4 +411,11 @@ void freeList(ListingNode * top) {
     /* free the taken one */
     freeNode(curNode);
   }
+}
+
+/**
+ * Allow processing hidden files. Will skip them by default
+ */
+void setProcessHiddenFiles() {
+    processHiddenFiles = 1;
 }

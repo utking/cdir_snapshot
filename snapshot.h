@@ -37,6 +37,7 @@ typedef struct _DirTreeNode {
 extern char listingFileName[FILE_NAME_LENGTH];
 extern char directoryPrefix;
 extern char filePrefix;
+extern int processHiddenFiles;
 extern int quietMode;
 extern int singleListingMode;
 extern ListingNode * singleListing;
@@ -56,6 +57,7 @@ void setSingleListingMode();
 void setDirectoryPrefix(char);
 void setFilePrefix(char);
 void setListingFileName(char *);
+void setProcessHiddenFiles();
 int addToSingleListing(const char *, ListingNode *);
 int writeSingleListing(ListingNode *);
 
