@@ -2,23 +2,27 @@
 
 C-program traversing a directory and writing its content into a listing file
 
+## Prerequisites
+
+- CMake
+
 ## Installation
 
 ```sh
-$ make
+$ cmake && make
 ```
 
 ## Usage
 
 ```sh
 // show usage info
-$ ./prog -h
+$ ./cdir_snapshot -h
 
-// create a snapshot for a current directory
-$ ./prog ./
+// create a snapshot for the current directory
+$ ./cdir_snapshot .
 
-// create a snapshot for a current directory in a quiet mode
-$ ./prog ./ -q
+// create a snapshot for the current directory in verbose mode
+$ ./cdir_snapshot . -v
 ```
 
 ## License
