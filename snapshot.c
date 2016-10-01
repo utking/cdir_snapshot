@@ -284,8 +284,8 @@ int takeSnapshot(const char * dirPath) {
  * Write the single listing into a file
  */
 int writeSingleListing(ListingNode * listing) {
-  char buf[FILE_NAME_LENGTH];
-  int fd;
+  char *b;
+  int fd, bLen, ret = 1;
   ssize_t bytesWritten = 0;
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 #ifdef O_NOFOLLOW
@@ -293,26 +293,35 @@ int writeSingleListing(ListingNode * listing) {
 #else
   fd = open(listingFileName, O_WRONLY | O_CREAT | O_TRUNC, mode);
 #endif
+  b = (char*)malloc(FILE_NAME_LENGTH * sizeof(char));
+  if (!b) {
+      printLog(LOG_ERR, "Cannot allocate memory for writing a single listing", 0);
+      return 0;
+  }
   if (fd != -1) {
     ListingNode * top = listing;
     /* write data, item by item */
     while (top) {/* prepare the current item to save */
-      memset(buf, 0, FILE_NAME_LENGTH);
-      strncpy(buf, top->fileName, FILE_NAME_LENGTH - 1);
-      buf[strlen(buf)] = '\n'; /* add a new line to each line */
-      bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * strlen(buf));
-      if (bytesWritten != strlen(buf)) {
+      if (top->fileName[0] == '[') {
+        bLen = snprintf(b, FILE_NAME_LENGTH, "%s\n", top->fileName);
+      } else {
+        bLen = snprintf(b, FILE_NAME_LENGTH, " %c:%s\n", top->itemType, top->fileName);
+      }
+      bytesWritten = (ssize_t) write(fd, b, sizeof(char) * bLen);
+      if (bytesWritten != bLen) {
         printLog(LOG_ERR, "Can't write buffer", errno);
       }
       top = top->next; /* move to the next item */
     }
     close(fd);
     printLog(LOG_INFO, "Single listing complete!", 0); /* show a completion message */
-    return 1;
+    ret = 1;
   } else {
     printLog(LOG_ERR, "Can't write a single listing", errno);
-    return 0;
+    ret = 0;
   }
+  free(b);
+  return ret;
 }
 
 /**
