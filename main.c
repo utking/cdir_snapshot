@@ -5,7 +5,7 @@ int main(int argc, char** argv) {
   char rootDirPath[FILE_NAME_LENGTH];
   int opt, result;
 
-  if (argc < 2 || !strncmp(argv[1], "-h", 2)) {
+  if (argc < 2 || !isDirectory(argv[1], "")) {
     printUsage(argv[0]);
     return 0;
   }
