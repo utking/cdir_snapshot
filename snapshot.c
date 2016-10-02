@@ -13,7 +13,7 @@ char filePrefix = 'F';
 int processHiddenFiles = 0;
 int quietMode = 1;
 int singleListingMode = 0;
-ListingNode * singleListing = NULL;
+DirTreeNode * singleListing = NULL;
 
 /**
  * Print a usage string
@@ -37,12 +37,12 @@ void processDirectory(const char *dirPath) {
   if (isDirectory(dirPath, "")) {
     DIR *dir;
     char nextDirPath[FILE_NAME_LENGTH]; /* Full path to a next directory */
-    ListingNode * top;
+    ListingNode * itemsTop = NULL;
     int isDir = 0;
-    DirTreeNode *listing = createTree(dirPath); /* head node */
     struct dirent *dirEntry;
     dir = opendir(dirPath);
     if (dir) { /* only process directories */
+      DirTreeNode *listing = createTree(dirPath);
       while ((dirEntry = readdir(dir))) {
         /* skip 'this' and 'parent' directories and existing listing files */
         if (!strncmp(dirEntry->d_name, ".", FILE_NAME_LENGTH) || 
@@ -54,11 +54,11 @@ void processDirectory(const char *dirPath) {
         isDir = isDirectory(dirPath, dirEntry->d_name);
         if (!listing->items) { /* head node is empty, create a new one */
           listing->items = createNode(dirEntry->d_name, isDir);
-          top = listing->items; /* remember the head element */
+          itemsTop = listing->items; /* remember the head element */
         } else {
           /* create a next node */
-          top->next = createNode(dirEntry->d_name, isDir);
-          top = top->next;
+          itemsTop->next = createNode(dirEntry->d_name, isDir);
+          itemsTop = itemsTop->next;
         }
         /* If a current entry is directory, processDirectory(curEntry) */
         memset(nextDirPath, 0, sizeof(char) * FILE_NAME_LENGTH);
@@ -68,14 +68,13 @@ void processDirectory(const char *dirPath) {
       closedir(dir);
       if (singleListingMode) {
         /* In the single listing mode, collect all the items */
-        addToSingleListing(dirPath, listing->items);
+        addToSingleListing(listing);
       } else {
         /* all entries collected, save them into a listing file */
         writeListing(listing);
+        freeTree(listing);
       }
     }
-    /* free all elements */
-    freeTree(listing);
   }
 }
 
@@ -193,14 +192,6 @@ ListingNode * createNode(const char * fileName, const int isDir) {
 }
 
 /**
- * Free the node.
- */
-void freeNode(ListingNode *node) {
-  free(node->fileName);
-  free(node);
-}
-
-/**
  * Set quiet mode flag
  */
 void setVerboseMode() {
@@ -215,46 +206,14 @@ void setSingleListingMode() {
 }
 
 /**
- * Add a directory listing to the single listing
+ * Add a directory to the single listing
  */
-int addToSingleListing(const char * dirPath, ListingNode * listing) {
-  /* static current position in the single listing */
-  static ListingNode * curListingPos = NULL;
-  ListingNode * top;
-  int isDir = 1;
-  char curItemPath[DIR_NAME_LENGTH];
-  /* embrace a directory path into square brackets */
-  memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
-  snprintf(curItemPath, sizeof(char) * (DIR_NAME_LENGTH - 1), "[%s]", dirPath);
-  /* create new top element with the directory path */
-  top = createNode(curItemPath, isDir);
-  /* attach the listing to that */
-  top->next = listing;
-  /* make that top element a new listing top */
-  listing = top;
+void addToSingleListing(DirTreeNode * listing) {
   if (!singleListing) {
-    /* There is no items yet. Initialize a listing */
-    singleListing = createNode(listing->fileName, isDirectory(dirPath, listing->fileName));
-    listing = listing->next;
-    curListingPos = singleListing;
+    singleListing = listing;
+  } else {
+    insertNode(singleListing, listing);
   }
-  /* Else, append items to the list */
-  while (listing) {
-    if (listing->fileName[0] != '[') {
-      /* it is not the root directory; append the new node */
-      curListingPos->next = createNode(listing->fileName, listing->itemType == directoryPrefix);
-    } else {
-      /* it'a root directory, just add it */
-      curListingPos->next = createNode(listing->fileName, 1);
-    }
-    /* move to the next element */
-    listing = listing->next;
-    /* update current position */
-    curListingPos = curListingPos->next;
-  }
-  /* free list */
-  freeNode(top);
-  return 1;
 }
 
 /**
@@ -269,14 +228,7 @@ int takeSnapshot(const char * dirPath) {
     /* write the single listing */
     ret = writeSingleListing(singleListing);
     /* free all elements */
-    while (singleListing) {
-      /* take the head element */
-      ListingNode *curNode = singleListing;
-      /* move to the next one */
-      singleListing = singleListing->next;
-      /* free the taken one */
-      freeNode(curNode);
-    }
+    freeTree(singleListing);
   }
   return ret;
 }
@@ -284,45 +236,55 @@ int takeSnapshot(const char * dirPath) {
 /**
  * Write the single listing into a file
  */
-int writeSingleListing(ListingNode * listing) {
-  char *buf;
-  int fd, bLen, ret = 1;
-  ssize_t bytesWritten = 0;
+int writeSingleListing(DirTreeNode * listing) {
+  int fd;
+  printLog(LOG_INFO, "Single listing write!", 0);
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 #ifdef O_NOFOLLOW
   fd = open(listingFileName, O_WRONLY | O_CREAT | O_NOFOLLOW | O_TRUNC, mode);
 #else
   fd = open(listingFileName, O_WRONLY | O_CREAT | O_TRUNC, mode);
 #endif
-  buf = (char*)malloc(FILE_NAME_LENGTH * sizeof(char));
-  if (!buf) {
-      printLog(LOG_ERR, "Cannot allocate memory for writing a single listing", 0);
-      return 0;
-  }
   if (fd != -1) {
-    ListingNode * top = listing;
+    writeListingNode(fd, listing);
+    close(fd);
+    printLog(LOG_INFO, "Single listing complete!", 0); /* show a completion message */
+    return 0;
+  } else {
+    printLog(LOG_ERR, "Can't write a single listing", errno);
+    return 1;
+  }
+}
+
+int writeListingNode(int fd, DirTreeNode * node) {
+  int bLen;
+  ssize_t bytesWritten = 0;
+  char *buf = (char *)malloc(FILE_NAME_LENGTH * sizeof(char));
+  if (fd != -1) {
+    if (node->left) {
+      writeListingNode(fd, node->left);
+    }
+    if (node->right) {
+      writeListingNode(fd, node->right);
+    }
+    bLen = snprintf(buf, FILE_NAME_LENGTH, "[%s]\n", node->name);
+    bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * bLen);
+    if (bytesWritten != bLen) {
+      printLog(LOG_ERR, "Can't write buffer", errno);
+    }
     /* write data, item by item */
+    ListingNode * top = node->items;
     while (top) {/* prepare the current item to save */
-      if (top->fileName[0] == '[') {
-        bLen = snprintf(buf, FILE_NAME_LENGTH, "%s\n", top->fileName);
-      } else {
-        bLen = snprintf(buf, FILE_NAME_LENGTH, " %c:%s\n", top->itemType, top->fileName);
-      }
+      bLen = snprintf(buf, FILE_NAME_LENGTH, " %c:%s\n", top->itemType, top->fileName);
       bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * bLen);
       if (bytesWritten != bLen) {
-        printLog(LOG_ERR, "Can't write buffer", errno);
+        printLog(LOG_ERR, "Error writing a single listing item", errno);
       }
       top = top->next; /* move to the next item */
     }
-    close(fd);
-    printLog(LOG_INFO, "Single listing complete!", 0); /* show a completion message */
-    ret = 1;
-  } else {
-    printLog(LOG_ERR, "Can't write a single listing", errno);
-    ret = 0;
   }
   free(buf);
-  return ret;
+  return 0;
 }
 
 /**
@@ -365,37 +327,40 @@ DirTreeNode * createTree(const char * fileName) {
   return node;
 }
 
-void insertNode(DirTreeNode * tree, const char * fileName) {
-  if (tree && fileName) {
-    if (strncmp(fileName, tree->name, FILE_NAME_LENGTH - 1) < 0) {
+void insertNode(DirTreeNode * tree, DirTreeNode * node) {
+  if (tree && node->name) {
+    if (strncmp(node->name, tree->name, FILE_NAME_LENGTH - 1) < 0) {
       if (tree->left) {
-        insertNode(tree->left, fileName);
+        insertNode(tree->left, node);
       } else {
-        tree->left = createTree(fileName);
+        tree->left = node;
       }
-    } else if (strncmp(fileName, tree->name, FILE_NAME_LENGTH - 1) > 0) {
+    } else if (strncmp(node->name, tree->name, FILE_NAME_LENGTH - 1) > 0) {
       if (tree->right) {
-        insertNode(tree->right, fileName);
+        insertNode(tree->right, node);
       } else {
-        tree->right = createTree(fileName);
+        tree->right = node;
       }
     }
   }
 }
 
 void freeTree(DirTreeNode * top) {
+  freeLeaf(top);
+  free(top);
+}
+void freeLeaf(DirTreeNode * top) {
   if (top) {
     if (top->left) {
-      freeTree(top->left);
+      freeLeaf(top->left);
+      free(top->left);
     }
     if (top->right) {
-      freeTree(top->right);
+      freeLeaf(top->right);
+      free(top->right);
     }
     free(top->name);
-    free(top->left);
-    free(top->right);
     freeList(top->items);
-    free(top);
   }
 }
 
@@ -406,7 +371,8 @@ void freeList(ListingNode * top) {
     /* move to the next one */
     top = top->next;
     /* free the taken one */
-    freeNode(curNode);
+    free(curNode->fileName);
+    free(curNode);
   }
 }
 

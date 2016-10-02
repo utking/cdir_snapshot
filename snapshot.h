@@ -40,13 +40,12 @@ extern char filePrefix;
 extern int processHiddenFiles;
 extern int quietMode;
 extern int singleListingMode;
-extern ListingNode * singleListing;
+extern DirTreeNode * singleListing;
 
 enum LogType { LOG_ERR, LOG_INFO, LOG_LOG, LOG_DONE };
 
 int takeSnapshot(const char*);
 ListingNode * createNode(const char*, const int);
-void freeNode(ListingNode *);
 void printLog(enum LogType, const char*, int);
 void printUsage(const char*);
 void processDirectory(const char*);
@@ -58,10 +57,12 @@ void setDirectoryPrefix(char);
 void setFilePrefix(char);
 void setListingFileName(char *);
 void setProcessHiddenFiles();
-int addToSingleListing(const char *, ListingNode *);
-int writeSingleListing(ListingNode *);
+void addToSingleListing(DirTreeNode *);
+int writeSingleListing(DirTreeNode *);
+int writeListingNode(int, DirTreeNode *);
 
 DirTreeNode * createTree(const char *);
-void insertNode(DirTreeNode *, const char *);
+void insertNode(DirTreeNode *, DirTreeNode *);
 void freeTree(DirTreeNode *);
+void freeLeaf(DirTreeNode *);
 void freeList(ListingNode *);
