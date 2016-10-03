@@ -24,7 +24,8 @@ extern char listPathFormat[];
 typedef struct _ListingNode {
   char itemType;
   char * fileName;
-  struct _ListingNode * next;
+  struct _ListingNode * left;
+  struct _ListingNode * right;
 } ListingNode;
 
 typedef struct _DirTreeNode {
@@ -45,7 +46,6 @@ extern DirTreeNode * singleListing;
 enum LogType { LOG_ERR, LOG_INFO, LOG_LOG, LOG_DONE };
 
 int takeSnapshot(const char*);
-ListingNode * createNode(const char*, const int);
 void printLog(enum LogType, const char*, int);
 void printUsage(const char*);
 void processDirectory(const char*);
@@ -60,9 +60,14 @@ void setProcessHiddenFiles();
 void addToSingleListing(DirTreeNode *);
 int writeSingleListing(DirTreeNode *);
 int writeListingNode(int, DirTreeNode *);
+int writeListingNodeItem(int, ListingNode *);
 
+ListingNode * createNode(const char*, const int);
 DirTreeNode * createTree(const char *);
 void insertNode(DirTreeNode *, DirTreeNode *);
+void insertListingItem(ListingNode *, ListingNode *);
 void freeTree(DirTreeNode *);
+void freeItemsTree(ListingNode *);
 void freeLeaf(DirTreeNode *);
+void freeItemLeaf(ListingNode *);
 void freeList(ListingNode *);

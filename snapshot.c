@@ -37,7 +37,6 @@ void processDirectory(const char *dirPath) {
   if (isDirectory(dirPath, "")) {
     DIR *dir;
     char nextDirPath[FILE_NAME_LENGTH]; /* Full path to a next directory */
-    ListingNode * itemsTop = NULL;
     int isDir = 0;
     struct dirent *dirEntry;
     dir = opendir(dirPath);
@@ -52,13 +51,10 @@ void processDirectory(const char *dirPath) {
           continue;
         }
         isDir = isDirectory(dirPath, dirEntry->d_name);
-        if (!listing->items) { /* head node is empty, create a new one */
-          listing->items = createNode(dirEntry->d_name, isDir);
-          itemsTop = listing->items; /* remember the head element */
+        if (listing->items) {
+          insertListingItem(listing->items, createNode(dirEntry->d_name, isDir));
         } else {
-          /* create a next node */
-          itemsTop->next = createNode(dirEntry->d_name, isDir);
-          itemsTop = itemsTop->next;
+          listing->items = createNode(dirEntry->d_name, isDir);
         }
         /* If a current entry is directory, processDirectory(curEntry) */
         memset(nextDirPath, 0, sizeof(char) * FILE_NAME_LENGTH);
@@ -78,6 +74,29 @@ void processDirectory(const char *dirPath) {
   }
 }
 
+void insertListingItem(ListingNode * tree, ListingNode * node) {
+  if (tree && node->fileName) {
+    char *bufTree = (char *)malloc(FILE_NAME_LENGTH * sizeof(char));
+    char *bufNode = (char *)malloc(FILE_NAME_LENGTH * sizeof(char));
+    snprintf(bufTree, FILE_NAME_LENGTH, " %c:%s\n", tree->itemType, tree->fileName);
+    snprintf(bufNode, FILE_NAME_LENGTH, " %c:%s\n", node->itemType, node->fileName);
+    if (strncmp(bufNode, bufTree, FILE_NAME_LENGTH) < 0) {
+      if (tree->left) {
+        insertListingItem(tree->left, node);
+      } else {
+        tree->left = node;
+      }
+    } else if (strncmp(bufNode, bufTree, FILE_NAME_LENGTH) > 0) {
+      if (tree->right) {
+        insertListingItem(tree->right, node);
+      } else {
+        tree->right = node;
+      }
+    }
+    free(bufTree);
+    free(bufNode);
+  }
+}
 
 /**
  * Print a log message with a type and an error code
@@ -113,7 +132,6 @@ void printLog(enum LogType type, const char * msg, int errCode) {
  */
 int writeListing(DirTreeNode * listing) {
   int fd;
-  ListingNode *top = listing->items;
   ssize_t bytesWritten = 0;
   char buf[FILE_NAME_LENGTH];
   char listingFilePath[DIR_NAME_LENGTH]; /* Full path to a listing file */
@@ -136,17 +154,7 @@ int writeListing(DirTreeNode * listing) {
     if (bytesWritten != strlen(buf)) {
       printLog(LOG_ERR, "Can't write buffer", errno);
     }
-    /* write data, item by item */
-    while (top) {/* prepare the current item to save */
-      memset(buf, 0, FILE_NAME_LENGTH);
-      snprintf(buf, FILE_NAME_LENGTH-1, " %c:%s", top->itemType, top->fileName);
-      buf[strlen(buf)] = '\n'; /* add a new line to each line */
-      bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * strlen(buf));
-      if (bytesWritten != strlen(buf)) {
-        printLog(LOG_ERR, "Can't write buffer", errno);
-      }
-      top = top->next; /* move to the next item */
-    }
+    writeListingNodeItem(fd, listing->items);
     close(fd);
     printLog(LOG_DONE, listing->name, 0); /* show a completion message */
     return 1;
@@ -186,7 +194,8 @@ ListingNode * createNode(const char * fileName, const int isDir) {
   } else {
       node->itemType = filePrefix;
   }
-  node->next = NULL;
+  node->left = NULL;
+  node->right = NULL;
 
   return node;
 }
@@ -259,31 +268,43 @@ int writeSingleListing(DirTreeNode * listing) {
 int writeListingNode(int fd, DirTreeNode * node) {
   int bLen;
   ssize_t bytesWritten = 0;
-  char *buf = (char *)malloc(FILE_NAME_LENGTH * sizeof(char));
   if (fd != -1) {
     if (node->left) {
       writeListingNode(fd, node->left);
     }
-    if (node->right) {
-      writeListingNode(fd, node->right);
-    }
+    char *buf = (char *)malloc(FILE_NAME_LENGTH * sizeof(char));
     bLen = snprintf(buf, FILE_NAME_LENGTH, "[%s]\n", node->name);
     bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * bLen);
     if (bytesWritten != bLen) {
       printLog(LOG_ERR, "Can't write buffer", errno);
     }
-    /* write data, item by item */
-    ListingNode * top = node->items;
-    while (top) {/* prepare the current item to save */
-      bLen = snprintf(buf, FILE_NAME_LENGTH, " %c:%s\n", top->itemType, top->fileName);
-      bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * bLen);
-      if (bytesWritten != bLen) {
-        printLog(LOG_ERR, "Error writing a single listing item", errno);
-      }
-      top = top->next; /* move to the next item */
+    writeListingNodeItem(fd, node->items);
+    free(buf);
+    if (node->right) {
+      writeListingNode(fd, node->right);
     }
   }
-  free(buf);
+  return 0;
+}
+
+int writeListingNodeItem(int fd, ListingNode * node) {
+  int bLen;
+  ssize_t bytesWritten = 0;
+  if (node && fd != -1) {
+    if (node->left) {
+      writeListingNodeItem(fd, node->left);
+    }
+    char *buf = (char *)malloc(FILE_NAME_LENGTH * sizeof(char));
+    bLen = snprintf(buf, FILE_NAME_LENGTH, " %c:%s\n", node->itemType, node->fileName);
+    bytesWritten = (ssize_t) write(fd, buf, sizeof(char) * bLen);
+    if (bytesWritten != bLen) {
+      printLog(LOG_ERR, "Can't write buffer", errno);
+    }
+    free(buf);
+    if (node->right) {
+      writeListingNodeItem(fd, node->right);
+    }
+  }
   return 0;
 }
 
@@ -349,6 +370,12 @@ void freeTree(DirTreeNode * top) {
   freeLeaf(top);
   free(top);
 }
+
+void freeItemsTree(ListingNode * top) {
+  freeItemLeaf(top);
+  free(top);
+}
+
 void freeLeaf(DirTreeNode * top) {
   if (top) {
     if (top->left) {
@@ -364,16 +391,22 @@ void freeLeaf(DirTreeNode * top) {
   }
 }
 
-void freeList(ListingNode * top) {
-  while (top) {
-    /* take the head element */
-    ListingNode *curNode = top;
-    /* move to the next one */
-    top = top->next;
-    /* free the taken one */
-    free(curNode->fileName);
-    free(curNode);
+void freeItemLeaf(ListingNode * top) {
+  if (top) {
+    if (top->left) {
+      freeItemLeaf(top->left);
+      free(top->left);
+    }
+    if (top->right) {
+      freeItemLeaf(top->right);
+      free(top->right);
+    }
+    free(top->fileName);
   }
+}
+
+void freeList(ListingNode * top) {
+  freeItemsTree(top);
 }
 
 /**
