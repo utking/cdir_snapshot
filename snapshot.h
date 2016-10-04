@@ -3,18 +3,12 @@
 #include <string.h>
 #include <error.h>
 #include <errno.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#ifdef __linux__
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <dirent.h> 
-#endif
+#include <dirent.h>
+#include <getopt.h>
 
 #define DIR_NAME_LENGTH 1024
 #define FILE_NAME_LENGTH 256

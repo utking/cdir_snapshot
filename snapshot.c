@@ -1,12 +1,6 @@
 #include "snapshot.h"
 
-#ifdef _WIN32
-char listPathFormat[] = "%s\\%s";
-#endif
-#ifdef __linux__
 char listPathFormat[] = "%s/%s";
-#endif
-
 char listingFileName[FILE_NAME_LENGTH] = LST_FILE_NAME;
 char directoryPrefix = 'D';
 char filePrefix = 'F';
@@ -171,15 +165,8 @@ int isDirectory(const char* dirPath, const char* filePath) {
   char curItemPath[DIR_NAME_LENGTH];
   memset(curItemPath, 0, sizeof(char) * DIR_NAME_LENGTH);
   snprintf(curItemPath, sizeof(char) * (DIR_NAME_LENGTH - 1), listPathFormat, dirPath, filePath);
-#ifdef _WIN32
-  /* For now, Windows is not supported */
-#elif __linux__
   struct stat sb;
   return (stat(curItemPath, &sb) == 0 && S_ISDIR(sb.st_mode));
-#else
-  /* Other platforms also are not supported */
-  return 0;
-#endif
 }
 
 /**

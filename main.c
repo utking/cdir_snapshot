@@ -1,5 +1,4 @@
 #include "snapshot.h"
-#include <getopt.h>
 
 int main(int argc, char** argv) {
   char rootDirPath[FILE_NAME_LENGTH];
