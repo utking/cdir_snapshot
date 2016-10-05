@@ -433,4 +433,5 @@ DirTreeNode * readLilsting(const char *fileName) {
     fclose(fd);
   }
   freeTree(tree);
+  return tree;
 }
