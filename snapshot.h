@@ -65,3 +65,5 @@ void freeItemsTree(ListingNode *);
 void freeLeaf(DirTreeNode *);
 void freeItemLeaf(ListingNode *);
 void freeList(ListingNode *);
+
+DirTreeNode * readLilsting(const char *);

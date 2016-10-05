@@ -402,3 +402,35 @@ void freeList(ListingNode * top) {
 void setProcessHiddenFiles() {
     processHiddenFiles = 1;
 }
+
+DirTreeNode * readLilsting(const char *fileName) {
+  DirTreeNode * tree = NULL;
+  DirTreeNode * cur = NULL;
+  FILE * fd;
+  char buf[FILE_NAME_LENGTH];
+  fd = fopen(fileName, "r");
+  if (fd) {
+    while (fgets(buf, FILE_NAME_LENGTH * sizeof(char), fd)) {
+      if (buf[0] == '[') {
+        buf[strlen(buf) - 2] = 0;
+        if (!tree) {
+          tree = cur = createTree(buf+1);
+        } else {
+          cur = createTree(buf+1);
+          insertNode(tree, cur);
+        }
+      } else {
+        buf[strlen(buf) - 1] = 0;
+        if (cur) {
+          if (cur->items) {
+            insertListingItem(cur->items, createNode(buf+3, 0));
+          } else {
+            cur->items = createNode(buf+3, 0);
+          }
+        }
+      }
+    }
+    fclose(fd);
+  }
+  freeTree(tree);
+}
