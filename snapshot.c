@@ -6,6 +6,7 @@ char directoryPrefix = 'D';
 char filePrefix = 'F';
 int processHiddenFiles = 0;
 int quietMode = 1;
+int compareMode = 0;
 int singleListingMode = 0;
 DirTreeNode * singleListing = NULL;
 
@@ -21,6 +22,7 @@ void printUsage(const char * executableName) {
   printf("\t-f - set a custom file prefix letter. 'F' by default.\n");
   printf("\t-l - set a custom listing file name. 'dir.lst' by default.\n");
   printf("\t-v - verbose mode.\n");
+  printf("\t-c - compare with a previous listing. Do write a new one.\n");
   printf("\t-h - print usage info\n");
 }
 
@@ -60,8 +62,12 @@ void processDirectory(const char *dirPath) {
         /* In the single listing mode, collect all the items */
         addToSingleListing(listing);
       } else {
-        /* all entries collected, save them into a listing file */
-        writeListing(listing);
+        if (compareMode) {
+          readLilsting(dirPath, listingFileName);
+        } else {
+          /* all entries collected, save them into a listing file */
+          writeListing(listing);
+        }
         freeTree(listing);
       }
     }
@@ -194,6 +200,10 @@ void setVerboseMode() {
   quietMode = 0;
 }
 
+void setCompareMode() {
+  compareMode = 1;
+}
+
 /**
  * Set single listing mode flag
  */
@@ -221,8 +231,12 @@ int takeSnapshot(const char * dirPath) {
   /* process a directory */
   processDirectory(dirPath);
   if (singleListingMode) {
-    /* write the single listing */
-    ret = writeSingleListing(singleListing);
+    if (compareMode) {
+      /* write the single listing */
+      ret = writeSingleListing(singleListing);
+    } else {
+      readLilsting(dirPath, listingFileName);
+    }
     /* free all elements */
     freeTree(singleListing);
   }
@@ -403,12 +417,15 @@ void setProcessHiddenFiles() {
     processHiddenFiles = 1;
 }
 
-DirTreeNode * readLilsting(const char *fileName) {
+DirTreeNode * readLilsting(const char * dirPath, const char *fileName) {
   DirTreeNode * tree = NULL;
   DirTreeNode * cur = NULL;
   FILE * fd;
   char buf[FILE_NAME_LENGTH];
-  fd = fopen(fileName, "r");
+  char listingPath[DIR_NAME_LENGTH]; /* Full path to a next directory */
+  memset(listingPath, 0, sizeof(char) * DIR_NAME_LENGTH);
+  snprintf(listingPath, sizeof(char) * (DIR_NAME_LENGTH - 1), listPathFormat, dirPath, fileName);
+  fd = fopen(listingPath, "r");
   if (fd) {
     while (fgets(buf, FILE_NAME_LENGTH * sizeof(char), fd)) {
       if (buf[0] == '[') {

@@ -34,6 +34,7 @@ extern char directoryPrefix;
 extern char filePrefix;
 extern int processHiddenFiles;
 extern int quietMode;
+extern int compareMode;
 extern int singleListingMode;
 extern DirTreeNode * singleListing;
 
@@ -45,6 +46,7 @@ void printUsage(const char*);
 void processDirectory(const char*);
 int writeListing(DirTreeNode*);
 int isDirectory(const char*, const char *);
+void setCompareMode();
 void setVerboseMode();
 void setSingleListingMode();
 void setDirectoryPrefix(char);
@@ -66,4 +68,4 @@ void freeLeaf(DirTreeNode *);
 void freeItemLeaf(ListingNode *);
 void freeList(ListingNode *);
 
-DirTreeNode * readLilsting(const char *);
+DirTreeNode * readLilsting(const char *, const char *);
