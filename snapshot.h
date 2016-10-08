@@ -69,3 +69,6 @@ void freeItemLeaf(ListingNode *);
 void freeList(ListingNode *);
 
 DirTreeNode * readLilsting(const char *, const char *);
+void compareTrees(DirTreeNode *, DirTreeNode *);
+DirTreeNode * findDirectory(DirTreeNode *, const char *);
+ListingNode * findItemInDirectory(ListingNode *, const char *);

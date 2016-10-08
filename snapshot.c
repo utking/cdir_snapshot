@@ -232,10 +232,12 @@ int takeSnapshot(const char * dirPath) {
   processDirectory(dirPath);
   if (singleListingMode) {
     if (compareMode) {
+      DirTreeNode * prevListing = readLilsting(dirPath, listingFileName);
+      compareTrees(prevListing, singleListing);
+      freeTree(prevListing);
+    } else {
       /* write the single listing */
       ret = writeSingleListing(singleListing);
-    } else {
-      readLilsting(dirPath, listingFileName);
     }
     /* free all elements */
     freeTree(singleListing);
@@ -449,6 +451,37 @@ DirTreeNode * readLilsting(const char * dirPath, const char *fileName) {
     }
     fclose(fd);
   }
-  freeTree(tree);
   return tree;
+}
+
+void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree) {
+  ;
+}
+
+DirTreeNode * findDirectory(DirTreeNode * tree, const char * dirPath) {
+  if (tree && dirPath) {
+    if (!strncmp(tree->name, dirPath, FILE_NAME_LENGTH)) {
+      return tree;
+    }
+    if (strncmp(tree->name, dirPath, FILE_NAME_LENGTH) > 0) {
+      return findDirectory(tree->left, dirPath);
+    } else {
+      return findDirectory(tree->right, dirPath);
+    }
+  }
+  return NULL;
+}
+
+ListingNode * findItemInDirectory(ListingNode * node, const char * fileName) {
+  if (node && fileName) {
+    if (!strncmp(node->fileName, fileName, FILE_NAME_LENGTH)) {
+      return node;
+    }
+    if (strncmp(node->fileName, fileName, FILE_NAME_LENGTH) > 0) {
+      return findItemInDirectory(node->left, fileName);
+    } else {
+      return findItemInDirectory(node->right, fileName);
+    }
+  }
+  return NULL;
 }
