@@ -63,7 +63,9 @@ void processDirectory(const char *dirPath) {
         addToSingleListing(listing);
       } else {
         if (compareMode) {
-          readLilsting(dirPath, listingFileName);
+          DirTreeNode * prevListing = readLilsting(dirPath, listingFileName);
+          compareTrees(prevListing, listing, 1);
+          compareTrees(listing, prevListing, 0);
         } else {
           /* all entries collected, save them into a listing file */
           writeListing(listing);
@@ -228,12 +230,15 @@ void addToSingleListing(DirTreeNode * listing) {
  */
 int takeSnapshot(const char * dirPath) {
   int ret = 0;
-  /* process a directory */
+  char cwd[DIR_NAME_LENGTH];
+      /* process a directory */
   processDirectory(dirPath);
   if (singleListingMode) {
+    getcwd(cwd, DIR_NAME_LENGTH);
     if (compareMode) {
-      DirTreeNode * prevListing = readLilsting(dirPath, listingFileName);
-      compareTrees(prevListing, singleListing);
+      DirTreeNode * prevListing = readLilsting(cwd, listingFileName);
+      compareTrees(prevListing, singleListing, 1);
+      compareTrees(singleListing, prevListing, 0);
       freeTree(prevListing);
     } else {
       /* write the single listing */
@@ -454,8 +459,27 @@ DirTreeNode * readLilsting(const char * dirPath, const char *fileName) {
   return tree;
 }
 
-void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree) {
-  ;
+void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree, const int direction) {
+  char buf[DIR_NAME_LENGTH];
+  if (prevTree && curTree) {
+    if (curTree->left) {
+      compareTrees(prevTree, curTree->left, direction);
+    }
+    if (curTree->right) {
+      compareTrees(prevTree, curTree->right, direction);
+    }
+    DirTreeNode * item = findDirectory(prevTree, curTree->name);
+    if (item) {
+      //printLog(LOG_LOG, "Compare items", 0);
+    } else {
+      if (direction) {
+        snprintf(buf, sizeof(char) * (DIR_NAME_LENGTH - 1), "+++ [%s]", curTree->name);
+      } else {
+        snprintf(buf, sizeof(char) * (DIR_NAME_LENGTH - 1), "--- [%s]", curTree->name);
+      }
+      printf("%s\n", buf);
+    }
+  }
 }
 
 DirTreeNode * findDirectory(DirTreeNode * tree, const char * dirPath) {
