@@ -470,7 +470,7 @@ void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree, const int direc
     }
     DirTreeNode * item = findDirectory(prevTree, curTree->name);
     if (item) {
-      //printLog(LOG_LOG, "Compare items", 0);
+      compareItemsInDirectory(item->items, curTree->items, direction);
     } else {
       if (direction) {
         snprintf(buf, sizeof(char) * (DIR_NAME_LENGTH - 1), "+++ [%s]", curTree->name);
@@ -496,15 +496,36 @@ DirTreeNode * findDirectory(DirTreeNode * tree, const char * dirPath) {
   return NULL;
 }
 
-ListingNode * findItemInDirectory(ListingNode * node, const char * fileName) {
-  if (node && fileName) {
-    if (!strncmp(node->fileName, fileName, FILE_NAME_LENGTH)) {
-      return node;
+void compareItemsInDirectory(ListingNode * prevTree, ListingNode * curTree, const int direction) {
+  char buf[FILE_NAME_LENGTH];
+  if (prevTree && curTree) {
+    if (curTree->left) {
+      compareItemsInDirectory(prevTree, curTree->left, direction);
     }
-    if (strncmp(node->fileName, fileName, FILE_NAME_LENGTH) > 0) {
-      return findItemInDirectory(node->left, fileName);
+    if (curTree->right) {
+      compareItemsInDirectory(prevTree, curTree->right, direction);
+    }
+    ListingNode * item = findItemInDirectory(prevTree, curTree->fileName);
+    if (!item) {
+      if (direction) {
+        snprintf(buf, sizeof(char) * (FILE_NAME_LENGTH - 1), " +++ %c:%s", curTree->itemType, curTree->fileName);
+      } else {
+        snprintf(buf, sizeof(char) * (FILE_NAME_LENGTH - 1), " --- %c:%s", curTree->itemType, curTree->fileName);
+      }
+      printf("%s\n", buf);
+    }
+  }
+}
+
+ListingNode * findItemInDirectory(ListingNode * tree, const char * fileName) {
+  if (tree && fileName) {
+    if (!strncmp(tree->fileName, fileName, FILE_NAME_LENGTH)) {
+      return tree;
+    }
+    if (strncmp(tree->fileName, fileName, FILE_NAME_LENGTH) > 0) {
+      return findItemInDirectory(tree->left, fileName);
     } else {
-      return findItemInDirectory(node->right, fileName);
+      return findItemInDirectory(tree->right, fileName);
     }
   }
   return NULL;
