@@ -478,6 +478,7 @@ void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree, const int direc
         snprintf(buf, sizeof(char) * (DIR_NAME_LENGTH - 1), "--- [%s]", curTree->name);
       }
       printf("%s\n", buf);
+      writeDirDifference(curTree->items, direction);
     }
   }
 }
@@ -529,4 +530,20 @@ ListingNode * findItemInDirectory(ListingNode * tree, const char * fileName) {
     }
   }
   return NULL;
+}
+
+void writeDirDifference(ListingNode * listing, const int newItems) {
+  if (listing) {
+    if (listing->left) {
+      writeDirDifference(listing->left, newItems);
+    }
+    if (listing->right) {
+      writeDirDifference(listing->right, newItems);
+    }
+    if (newItems) {
+      printf(" +++ %c:%s\n", listing->itemType, listing->fileName);
+    } else {
+      printf(" --- %c:%s\n", listing->itemType, listing->fileName);
+    }
+  }
 }
