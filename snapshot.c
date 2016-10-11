@@ -427,6 +427,7 @@ void setProcessHiddenFiles() {
 DirTreeNode * readLilsting(const char * dirPath, const char *fileName) {
   DirTreeNode * tree = NULL;
   DirTreeNode * cur = NULL;
+  int isDir = 0;
   FILE * fd;
   char buf[FILE_NAME_LENGTH];
   char listingPath[DIR_NAME_LENGTH]; /* Full path to a next directory */
@@ -445,11 +446,12 @@ DirTreeNode * readLilsting(const char * dirPath, const char *fileName) {
         }
       } else {
         buf[strlen(buf) - 1] = 0;
+        isDir = buf[1] == directoryPrefix;
         if (cur) {
           if (cur->items) {
-            insertListingItem(cur->items, createNode(buf+3, 0));
+            insertListingItem(cur->items, createNode(buf+3, isDir));
           } else {
-            cur->items = createNode(buf+3, 0);
+            cur->items = createNode(buf+3, isDir);
           }
         }
       }
@@ -470,7 +472,9 @@ void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree, const int direc
     }
     DirTreeNode * item = findDirectory(prevTree, curTree->name);
     if (item) {
+      printf("Comparing %s\n", curTree->name);
       compareItemsInDirectory(item->items, curTree->items, direction);
+      printf("...done\n");
     } else {
       if (direction) {
         snprintf(buf, sizeof(char) * (DIR_NAME_LENGTH - 1), "+++ [%s]", curTree->name);
@@ -506,7 +510,7 @@ void compareItemsInDirectory(ListingNode * prevTree, ListingNode * curTree, cons
     if (curTree->right) {
       compareItemsInDirectory(prevTree, curTree->right, direction);
     }
-    ListingNode * item = findItemInDirectory(prevTree, curTree->fileName);
+    ListingNode * item = findItemInDirectory(prevTree, curTree);
     if (!item) {
       if (direction) {
         snprintf(buf, sizeof(char) * (FILE_NAME_LENGTH - 1), " +++ %c:%s", curTree->itemType, curTree->fileName);
@@ -518,15 +522,19 @@ void compareItemsInDirectory(ListingNode * prevTree, ListingNode * curTree, cons
   }
 }
 
-ListingNode * findItemInDirectory(ListingNode * tree, const char * fileName) {
-  if (tree && fileName) {
-    if (!strncmp(tree->fileName, fileName, FILE_NAME_LENGTH)) {
+ListingNode * findItemInDirectory(ListingNode * tree, ListingNode * node) {
+  char bufTree[FILE_NAME_LENGTH];
+  char bufNode[FILE_NAME_LENGTH];
+  if (tree && node) {
+    snprintf(bufTree, sizeof(char) * (FILE_NAME_LENGTH - 1), "%c:%s", tree->itemType, tree->fileName);
+    snprintf(bufNode, sizeof(char) * (FILE_NAME_LENGTH - 1), "%c:%s", node->itemType, node->fileName);
+    if (!strncmp(bufTree, bufNode, FILE_NAME_LENGTH)) {
       return tree;
     }
-    if (strncmp(tree->fileName, fileName, FILE_NAME_LENGTH) > 0) {
-      return findItemInDirectory(tree->left, fileName);
+    if (strncmp(bufTree, bufNode, FILE_NAME_LENGTH) > 0) {
+      return findItemInDirectory(tree->left, node);
     } else {
-      return findItemInDirectory(tree->right, fileName);
+      return findItemInDirectory(tree->right, node);
     }
   }
   return NULL;
