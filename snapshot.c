@@ -76,6 +76,11 @@ void processDirectory(const char *dirPath) {
   }
 }
 
+/**
+ * Insert an item in the directory's listing
+ * @param tree
+ * @param node
+ */
 void insertListingItem(ListingNode * tree, ListingNode * node) {
   if (tree && node->fileName) {
     char *bufTree = (char *)malloc(FILE_NAME_LENGTH * sizeof(char));
@@ -196,12 +201,15 @@ ListingNode * createNode(const char * fileName, const int isDir) {
 }
 
 /**
- * Set quiet mode flag
+ * Set the quiet mode flag
  */
 void setVerboseMode() {
   quietMode = 0;
 }
 
+/**
+ * Set the compare mode flag
+ */
 void setCompareMode() {
   compareMode = 1;
 }
@@ -273,6 +281,12 @@ int writeSingleListing(DirTreeNode * listing) {
   }
 }
 
+/**
+ * Write a directoty node into a file
+ * @param fd
+ * @param node
+ * @return
+ */
 int writeListingNode(int fd, DirTreeNode * node) {
   int bLen;
   ssize_t bytesWritten = 0;
@@ -295,6 +309,12 @@ int writeListingNode(int fd, DirTreeNode * node) {
   return 0;
 }
 
+/**
+ * Write a ditectory's items in a file
+ * @param fd
+ * @param node
+ * @return
+ */
 int writeListingNodeItem(int fd, ListingNode * node) {
   int bLen;
   ssize_t bytesWritten = 0;
@@ -356,6 +376,11 @@ DirTreeNode * createTree(const char * fileName) {
   return node;
 }
 
+/**
+ * Insert a directory node in the tree
+ * @param tree
+ * @param node
+ */
 void insertNode(DirTreeNode * tree, DirTreeNode * node) {
   if (tree && node->name) {
     if (strncmp(node->name, tree->name, FILE_NAME_LENGTH - 1) < 0) {
@@ -374,16 +399,32 @@ void insertNode(DirTreeNode * tree, DirTreeNode * node) {
   }
 }
 
+/**
+ * Free the memory allcated for the tree
+ * @param top
+ */
 void freeTree(DirTreeNode * top) {
+  /* free all leavs */
   freeLeaf(top);
+  /* free the root element */
   free(top);
 }
 
+/**
+ * Free the memory allcated for the tree' items
+ * @param top
+ */
 void freeItemsTree(ListingNode * top) {
+  /* free all leavs */
   freeItemLeaf(top);
+  /* free the root element */
   free(top);
 }
 
+/**
+ * Free a leaf recursively
+ * @param top
+ */
 void freeLeaf(DirTreeNode * top) {
   if (top) {
     if (top->left) {
@@ -399,6 +440,10 @@ void freeLeaf(DirTreeNode * top) {
   }
 }
 
+/**
+ * Free an item's leaf recursively
+ * @param top
+ */
 void freeItemLeaf(ListingNode * top) {
   if (top) {
     if (top->left) {
@@ -413,6 +458,10 @@ void freeItemLeaf(ListingNode * top) {
   }
 }
 
+/**
+ * Free memory allocated for a listing
+ * @param top
+ */
 void freeList(ListingNode * top) {
   freeItemsTree(top);
 }
@@ -424,6 +473,12 @@ void setProcessHiddenFiles() {
     processHiddenFiles = 1;
 }
 
+/**
+ * Read a directory listing for a file
+ * @param dirPath
+ * @param fileName
+ * @return
+ */
 DirTreeNode * readLilsting(const char * dirPath, const char *fileName) {
   DirTreeNode * tree = NULL;
   DirTreeNode * cur = NULL;
@@ -461,6 +516,12 @@ DirTreeNode * readLilsting(const char * dirPath, const char *fileName) {
   return tree;
 }
 
+/**
+ * Compare trees with a given direction
+ * @param prevTree
+ * @param curTree
+ * @param direction (determines if an item was added or removed)
+ */
 void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree, const int direction) {
   char buf[DIR_NAME_LENGTH];
   if (prevTree && curTree) {
@@ -487,6 +548,12 @@ void compareTrees(DirTreeNode * prevTree, DirTreeNode * curTree, const int direc
   }
 }
 
+/**
+ * Find the directory in a tree
+ * @param tree
+ * @param dirPath
+ * @return
+ */
 DirTreeNode * findDirectory(DirTreeNode * tree, const char * dirPath) {
   if (tree && dirPath) {
     if (!strncmp(tree->name, dirPath, FILE_NAME_LENGTH)) {
@@ -501,6 +568,12 @@ DirTreeNode * findDirectory(DirTreeNode * tree, const char * dirPath) {
   return NULL;
 }
 
+/**
+ * Compare items in the directories
+ * @param prevTree
+ * @param curTree
+ * @param direction
+ */
 void compareItemsInDirectory(ListingNode * prevTree, ListingNode * curTree, const int direction) {
   char buf[FILE_NAME_LENGTH];
   if (prevTree && curTree) {
@@ -522,6 +595,12 @@ void compareItemsInDirectory(ListingNode * prevTree, ListingNode * curTree, cons
   }
 }
 
+/**
+ * Find an item in the directory's listing
+ * @param tree
+ * @param node
+ * @return
+ */
 ListingNode * findItemInDirectory(ListingNode * tree, ListingNode * node) {
   char bufTree[FILE_NAME_LENGTH];
   char bufNode[FILE_NAME_LENGTH];
@@ -540,6 +619,11 @@ ListingNode * findItemInDirectory(ListingNode * tree, ListingNode * node) {
   return NULL;
 }
 
+/**
+ * Print a directory differences recursively
+ * @param listing
+ * @param newItems
+ */
 void writeDirDifference(ListingNode * listing, const int newItems) {
   if (listing) {
     if (listing->left) {
