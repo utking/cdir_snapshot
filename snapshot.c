@@ -66,6 +66,7 @@ void processDirectory(const char *dirPath) {
           DirTreeNode * prevListing = readLilsting(dirPath, listingFileName);
           compareTrees(prevListing, listing, 1);
           compareTrees(listing, prevListing, 0);
+          freeTree(prevListing);
         } else {
           /* all entries collected, save them into a listing file */
           writeListing(listing);
