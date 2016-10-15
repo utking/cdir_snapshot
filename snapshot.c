@@ -7,7 +7,7 @@ char filePrefix = 'F';
 int processHiddenFiles = 0;
 int quietMode = 1;
 int compareMode = 0;
-int singleListingMode = 0;
+int singleListingMode = 1;
 DirTreeNode * singleListing = NULL;
 
 /**
@@ -17,7 +17,7 @@ void printUsage(const char * executableName) {
   printf("Usage: %s %s\n", executableName, "<directory path> [-sqh] [-d <D>] [-f <F>] [-l <dir.lst>]");
   printf("Options:\n");
   printf("\t-a - process hidden files. Disabled by default.\n");
-  printf("\t-s - single listing. Save items in a single file in the current directory\n");
+  printf("\t-s - separate listing mode. Save items in a separate file for each directory\n");
   printf("\t-d - set a custom directory prefix letter. 'D' by default.\n");
   printf("\t-f - set a custom file prefix letter. 'F' by default.\n");
   printf("\t-l - set a custom listing file name. 'dir.lst' by default.\n");
@@ -218,8 +218,8 @@ void setCompareMode() {
 /**
  * Set single listing mode flag
  */
-void setSingleListingMode() {
-  singleListingMode = 1;
+void setSeparateListingMode() {
+  singleListingMode = 0;
 }
 
 /**

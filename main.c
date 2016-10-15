@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
         setProcessHiddenFiles();
         break;
       case 's':
-        setSingleListingMode();
+        setSeparateListingMode();
         break;
       case 'l':
         setListingFileName(optarg);

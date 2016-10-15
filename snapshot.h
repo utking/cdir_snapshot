@@ -48,7 +48,7 @@ int writeListing(DirTreeNode*);
 int isDirectory(const char*, const char *);
 void setCompareMode();
 void setVerboseMode();
-void setSingleListingMode();
+void setSeparateListingMode();
 void setDirectoryPrefix(char);
 void setFilePrefix(char);
 void setListingFileName(char *);
