@@ -23,6 +23,9 @@ $ ./cdir_snapshot .
 
 // create a snapshot for the current directory in verbose mode
 $ ./cdir_snapshot . -v
+
+// use the "separate listing mode" when creating snapshots
+$ ./cdir_snapshot . -s
 ```
 
 ## License
